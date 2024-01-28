@@ -19,7 +19,7 @@ def getChannelList():
 # This method will generate a jwt based on the supplied channelId
 # It involves sending a post request to a specific endpoint with some headers and params
 # The token expires in a day
-def generateJWT(channelId, iterative=False):
+def generateJWT(channelId, iterative=True):
     url = API_BASE_URL + "auth-service/v1/oauth/token-service/token"
     payload = json.dumps(getPayloadForJWT(channelId))
     headers = getHeaders()
