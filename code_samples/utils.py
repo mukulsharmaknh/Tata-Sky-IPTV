@@ -51,7 +51,7 @@ def m3ugen():
     with open("allChannels.json", "wb") as allChannelFile:
         response = requests.get("https://gist.githubusercontent.com/Shra1V32/ee918d53b2f0b65888809ba85f0e0183/raw/allChannels.json", timeout=15)
         allChannelFile.write(response.content)
-    channelList = jwt.getChannelList()
+    channelList = jwt.getUserChannelSubscribedList()
     commonJwt = jwt.getCommonJwt()
     tokensWithEpids = {}
     if not commonJwt:
