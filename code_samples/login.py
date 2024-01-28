@@ -44,7 +44,7 @@ def loginWithPass(sid, rmn, pwd):
                 "entitlements": responseData['userDetails']['entitlements'],
                 "sid": responseData['userDetails']['sid'],
                 "sName": responseData['userDetails']['sName'],
-                "acStatus": responseData['userDetails']['acStatus'],
+                "acStatus": ACTIVE,
                 "profileId": responseData['userProfile']['id'],
                 "loggedIn": "true"
             })
@@ -74,7 +74,7 @@ def loginWithOTP(sid, rmn, otp):
                 "entitlements": responseData['userDetails']['entitlements'],
                 "sid": responseData['userDetails']['sid'],
                 "sName": responseData['userDetails']['sName'],
-                "acStatus": responseData['userDetails']['acStatus'],
+                "acStatus": ACTIVE,
                 "profileId": responseData['userProfile']['id'],
                 "loggedIn": "true"
             })
