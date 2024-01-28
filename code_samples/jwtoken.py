@@ -93,9 +93,6 @@ def getEpidList(channelId):
         if channel['channel_id'] == str(channelId):
             selectedChannel.update(channel)
     userDetails = getUserDetails()
-    entitlements = [entitlement['pkgId'] for entitlement in userDetails["entitlements"]]
-    for entitlement in entitlements:
-        if entitlement in selectedChannel['channel_entitlements']:
             epidList.append({
                 "epid": "Subscription",
                 "bid": entitlement
