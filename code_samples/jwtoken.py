@@ -93,11 +93,7 @@ def getEpidList(channelId):
         if channel['channel_id'] == str(channelId):
             selectedChannel.update(channel)
     userDetails = getUserDetails()
-            epidList.append({
-                "epid": "Subscription",
-                "bid": entitlement
-            })
-    return epidList
+        return epidList
 
 # Decodes the token and returns the epid list
 def extractEpidsFromToken(token):
