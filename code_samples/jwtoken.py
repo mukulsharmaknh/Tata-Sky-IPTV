@@ -72,8 +72,6 @@ def getPayloadForCommonJWT():
 # checks the user entitlements in all the channel entitlements and keeps the channel if a specific user entitlement
 # has been found
 def getUserChannelSubscribedList():
-    included = []
-    userDetails = getUserDetails()
     channelList = getChannelList()  # All the channels saved in allChannels.json
     for channel in channelList:
                 included.append(channel)
