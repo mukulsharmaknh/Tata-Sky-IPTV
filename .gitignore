@@ -10,7 +10,6 @@
 .idea/
 
 userDetails.json
-userSubscribedChannels.json
 allChannelPlaylist.m3u
 code_samples/__pycache__/
 *.pyc
