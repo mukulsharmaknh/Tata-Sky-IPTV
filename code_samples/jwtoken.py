@@ -73,8 +73,13 @@ def getPayloadForCommonJWT():
 # has been found
 def getUserChannelSubscribedList():
     included = []
+    userDetails = getUserDetails()
+    entitlements = [entitlement['pkgId'] for entitlement in
+                    userDetails["entitlements"]]  # all the user entitlements saved in userDetails.json
     channelList = getChannelList()  # All the channels saved in allChannels.json
     for channel in channelList:
+        for userEntitlement in entitlements:
+            if userEntitlement in channel['channel_entitlements']:
                 included.append(channel)
     with open('userSubscribedChannels.json', 'w') as userSubChannelFile:
         json.dump(included, userSubChannelFile)
@@ -93,7 +98,14 @@ def getEpidList(channelId):
         if channel['channel_id'] == str(channelId):
             selectedChannel.update(channel)
     userDetails = getUserDetails()
-        return epidList
+    entitlements = [entitlement['pkgId'] for entitlement in userDetails["entitlements"]]
+    for entitlement in entitlements:
+        if entitlement in selectedChannel['channel_entitlements']:
+            epidList.append({
+                "epid": "Subscription",
+                "bid": entitlement
+            })
+    return epidList
 
 # Decodes the token and returns the epid list
 def extractEpidsFromToken(token):
