@@ -1,8 +1,6 @@
 from constants import API_BASE_URL
 import requests
 import json
-import base64
-import time
 
 
 # This method gets the userDetails from the userDetails file and returns it as a dictionary
@@ -14,7 +12,9 @@ def getUserDetails():
 
 # This method gets the channelList from the allChannels.json file and returns it as a list/dictionary
 def getChannelList():
-    return json.load(open("allChannels.json", "r"))
+    response = requests.get("https://gist.githubusercontent.com/Shra1V32/ee918d53b2f0b65888809ba85f0e0183/raw/allChannels.json", timeout=5)
+    return response.json()
+
 
 # This method will generate a jwt based on the supplied channelId
 # It involves sending a post request to a specific endpoint with some headers and params
@@ -55,18 +55,6 @@ def getPayloadForJWT(channelId):
         "epids": getEpidList(channelId)
     }
 
-def getPayloadForCommonJWT():
-    epidList = getCommonEpidList()
-    multipleEpid = len(epidList) > 1
-    payloads = [{
-        "action": "stream",
-        "epids": epid
-    } for epid in epidList] if multipleEpid else [{
-        "action": "stream",
-        "epids": epidList
-    }]
-    return payloads
-            
 
 # This method returns and also saves all the subscribed channels based on the users choices in the tatasky portal It
 # checks the user entitlements in all the channel entitlements and keeps the channel if a specific user entitlement
@@ -106,67 +94,6 @@ def getEpidList(channelId):
                 "bid": entitlement
             })
     return epidList
-
-# Decodes the token and returns the epid list
-def extractEpidsFromToken(token):
-    bidList = []
-    data = token.split(".")[1]
-    epids = base64.b64decode(data + "==").decode('utf-8')
-    epidList = json.loads(epids)
-    for epid in epidList['ent']:
-        bidList.append(epid['bid'])
-    return bidList
-
-def getCommonEpidList() -> list:
-    epidList = []
-    groupedEpidList = []
-    userDetails = getUserDetails()
-    entitlements = [entitlement['pkgId'] for entitlement in userDetails["entitlements"]]
-    if len(entitlements) > 5:
-        # Group the entitlements into chunks of 8
-        groupedEntitlements = [entitlements[i:i + 5] for i in range(0, len(entitlements), 5)]
-        for groupedEntitlement in groupedEntitlements:
-            epidList = []
-            for entitlement in groupedEntitlement:
-                epidList.append({
-                    "epid": "Subscription",
-                    "bid": entitlement
-                })
-            groupedEpidList.append(epidList)
-        return groupedEpidList
-    for entitlement in entitlements:
-        epidList.append({
-            "epid": "Subscription",
-            "bid": entitlement
-        })
-    return epidList
-
-def generateToken(url, headers, payload):
-    response = requests.request("POST", url, headers=headers, data=json.dumps(payload))
-    if response.status_code == 200:
-        msg = response.json()['message']
-        if msg == 'OAuth Token Generated Successfully':
-            return response.json()['data']['token']
-    elif response.status_code == 429 and response.json()['message'] == 'API rate limit exceeded':
-        return "Rate Limit Exceeded"
-    return ""
-
-def getCommonJwt():
-    url = API_BASE_URL + "auth-service/v1/oauth/token-service/token"
-    payloads = getPayloadForCommonJWT()
-    tokens = []
-    count = 0
-    for payload in payloads:
-        headers = getHeaders()
-        token = generateToken(url, headers, payload)
-        count += 1
-        while token == "Rate Limit Exceeded":
-            print(f"Rate Limit Exceeded for count {str(count)}, Retrying in 8 seconds...")
-            time.sleep(8)  # Wait for 60 seconds before retrying
-            token = generateToken(url, headers, payload)
-        if token:
-            tokens.append(token)
-    return tokens
 
 
 def getHeaders():
