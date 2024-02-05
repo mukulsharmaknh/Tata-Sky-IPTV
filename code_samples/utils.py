@@ -1,4 +1,3 @@
-# Generates Kodi playlist by default, If you want OTT Navigator Supported Playlist, pass '--ott-navigator' as argument.
 import jwtoken as jwt
 import threading
 import sys
@@ -47,15 +46,21 @@ def processTokenChunks(channelList):
 
 def m3ugen():
     ts = []
-    global m3ustr, commonJwt, tokensWithEpids
+    global m3ustr, tokensWithEpids
     with open("allChannels.json", "wb") as allChannelFile:
         response = requests.get("https://gist.githubusercontent.com/Shra1V32/ee918d53b2f0b65888809ba85f0e0183/raw/allChannels.json", timeout=15)
-        allChannelFile.write(response.content)
+        if response.status_code == 200:
+            allChannelFile.write(response.content)
+        else:
+            print("Failed to fetch channel list. Status Code:", response.status_code)
+            exit(1)
+
     channelList = jwt.getUserChannelSubscribedList()
     commonJwt = jwt.getCommonJwt()
     tokensWithEpids = {}
     if not commonJwt:
-        raise Exception("Could not generate common JWT")
+        print("Could not generate common JWT")
+        exit(1)
     for token in commonJwt:
         tokensWithEpids[token] = jwt.extractEpidsFromToken(token) 
 
