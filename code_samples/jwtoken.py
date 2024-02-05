@@ -60,19 +60,9 @@ def getPayloadForJWT(channelId):
 # checks the user entitlements in all the channel entitlements and keeps the channel if a specific user entitlement
 # has been found
 def getUserChannelSubscribedList():
-    included = []
-    userDetails = getUserDetails()
-    entitlements = [entitlement['pkgId'] for entitlement in
-                    userDetails["entitlements"]]  # all the user entitlements saved in userDetails.json
-    channelList = getChannelList()  # All the channels saved in allChannels.json
-    for channel in channelList:
-        for userEntitlement in entitlements:
-            if userEntitlement in channel['channel_entitlements']:
-                included.append(channel)
-    with open('userSubscribedChannels.json', 'w') as userSubChannelFile:
-        json.dump(included, userSubChannelFile)
-
-    return included
+    with open('allChannels.json', 'r') as allChannelsFile:
+        channelList = json.load(allChannelsFile)
+    return channelList
 
 
 # This method gets the needed epid or the entitlement/episode id
