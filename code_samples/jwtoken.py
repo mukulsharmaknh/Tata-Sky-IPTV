@@ -85,20 +85,17 @@ def getUserChannelSubscribedList():
 def getEpidList(channelId):
     epidList = []
     selectedChannel = {}
-    includedChannels = getUserChannelSubscribedList()
+    includedChannels = getChannelList()  # Get all channels instead of entitled channels
     for channel in includedChannels:
         if channel['channel_id'] == str(channelId):
             selectedChannel.update(channel)
-    userDetails = getUserDetails()
-    entitlements = [entitlement['pkgId'] for entitlement in userDetails["entitlements"]]
-    for entitlement in entitlements:
-        if entitlement in selectedChannel['channel_entitlements']:
-            epidList.append({
-                "epid": "Subscription",
-                "bid": entitlement
-            })
+    for channel in includedChannels:
+        epidList.append({
+            "epid": "Subscription",
+            "bid": channel['channel_id']
+        })
     return epidList
-
+    
 # Decodes the token and returns the epid list
 def extractEpidsFromToken(token):
     bidList = []
@@ -111,28 +108,14 @@ def extractEpidsFromToken(token):
 
 def getCommonEpidList() -> list:
     epidList = []
-    groupedEpidList = []
-    userDetails = getUserDetails()
-    entitlements = [entitlement['pkgId'] for entitlement in userDetails["entitlements"]]
-    if len(entitlements) > 5:
-        # Group the entitlements into chunks of 8
-        groupedEntitlements = [entitlements[i:i + 5] for i in range(0, len(entitlements), 5)]
-        for groupedEntitlement in groupedEntitlements:
-            epidList = []
-            for entitlement in groupedEntitlement:
-                epidList.append({
-                    "epid": "Subscription",
-                    "bid": entitlement
-                })
-            groupedEpidList.append(epidList)
-        return groupedEpidList
-    for entitlement in entitlements:
+    includedChannels = getChannelList()  # Get all channels instead of entitled channels
+    for channel in includedChannels:
         epidList.append({
             "epid": "Subscription",
-            "bid": entitlement
+            "bid": channel['channel_id']
         })
-    return epidList
-
+    return [epidList]
+    
 def generateToken(url, headers, payload):
     response = requests.request("POST", url, headers=headers, data=json.dumps(payload))
     if response.status_code == 200:
