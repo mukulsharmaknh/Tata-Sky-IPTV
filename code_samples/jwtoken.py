@@ -60,13 +60,12 @@ def getPayloadForJWT(channelId):
 def getPayloadForCommonJWT():
     epidList = getCommonEpidList()
     multipleEpid = len(epidList) > 1
-    payloads = [{
-        "action": "stream",
-        "epids": epid
-    } for epid in epidList] if multipleEpid else [{
-        "action": "stream",
-        "epids": epidList
-    }]
+
+    if multipleEpid:
+        payloads = [{"action": "stream", "epids": epid} for epid in epidList]
+    else:
+        payloads = [{"action": "stream", "epids": epidList}]
+
     return payloads
             
 
