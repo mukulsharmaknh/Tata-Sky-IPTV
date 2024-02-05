@@ -2,6 +2,7 @@
 import jwtoken as jwt
 import threading
 import sys
+import requests
 
 isOttNavigator = False
 args = len(sys.argv)
@@ -12,34 +13,52 @@ if args == 2 and sys.argv[1] == '--ott-navigator':
 m3ustr = '#EXTM3U  x-tvg-url="https://www.tsepg.cf/epg.xml.gz" \n\n'
 kodiPropLicenseType = "#KODIPROP:inputstream.adaptive.license_type=com.widevine.alpha"
 
+# Checks for the common elements in two lists
+def has_common_element(list1, list2):
+    return any(item in list2 for item in list1)
+
+def find_matching_token(channel):
+    epidList = jwt.getEpidList(channel['channel_id'])
+    for token, epids in tokensWithEpids.items():
+        if has_common_element([epid['bid'] for epid in epidList], epids):
+            return token
+    return None, None
 
 def processTokenChunks(channelList):
     global m3ustr
-    kodiPropLicenseUrl = ""
     if not channelList:
         print("Channel List is empty ..Exiting")
         exit(1)
+
     for channel in channelList:
-        ls_session_key = jwt.generateJWT(channel['channel_id'], iterative=False)
-        if ls_session_key != "":
-            licenseUrl = channel['channel_license_url'] + "&ls_session=" + ls_session_key
-            if isOttNavigator:
-                    kodiPropLicenseUrl = "#KODIPROP:inputstream.adaptive.license_key=" + licenseUrl
-            else:
-                    kodiPropLicenseUrl = "#KODIPROP:inputstream.adaptive.license_key=" + licenseUrl + "|Content-Type=application/octet-stream|R{SSM}|"
-        else:
-            print("Didn't get license for channel: Id: {0} Name:{1}".format(channel['channel_id'],
-                                                                            channel['channel_name']))
-            print('Continuing...Please get license manually for channel :', channel['channel_name'])
-        m3ustr += kodiPropLicenseType + "\n" + kodiPropLicenseUrl + "\n" + "#EXTINF:-1 "
-        m3ustr += "tvg-id=" + "\"" + channel['channel_id'] + "\" " + "group-title=" + "\"" + channel['channel_genre'] + "\" " + "tvg-logo=\"" + channel[
-            'channel_logo'] + "\" ," + channel['channel_name'] + "\n" + channel['channel_url'] + "\n\n"
+        token = find_matching_token(channel)
+        
+        if token is None:
+            print("Could not find a token for channel: " + channel['channel_name'])
+            continue
+
+        licenseUrl = channel['channel_license_url'] + "&ls_session=" + token
+        kodiPropLicenseUrl = "#KODIPROP:inputstream.adaptive.license_key=" + licenseUrl
+        if not isOttNavigator:
+            kodiPropLicenseUrl += "|Content-Type=application/octet-stream|R{SSM}|"
+
+        m3ustr += f"{kodiPropLicenseType}\n{kodiPropLicenseUrl}\n#EXTINF:-1 tvg-id=\"{channel['channel_id']}\" group-title=\"{channel['channel_genre']}\" tvg-logo=\"{channel['channel_logo']}\",{channel['channel_name']}\n{channel['channel_url']}\n\n"
 
 
 def m3ugen():
     ts = []
-    global m3ustr
+    global m3ustr, commonJwt, tokensWithEpids
+    with open("allChannels.json", "wb") as allChannelFile:
+        response = requests.get("https://gist.githubusercontent.com/Shra1V32/ee918d53b2f0b65888809ba85f0e0183/raw/allChannels.json", timeout=15)
+        allChannelFile.write(response.content)
     channelList = jwt.getUserChannelSubscribedList()
+    commonJwt = jwt.getCommonJwt()
+    tokensWithEpids = {}
+    if not commonJwt:
+        raise Exception("Could not generate common JWT")
+    for token in commonJwt:
+        tokensWithEpids[token] = jwt.extractEpidsFromToken(token) 
+
     for i in range(0, len(channelList), 5):
         t = threading.Thread(target=processTokenChunks, args=([channelList[i:i + 5]]))
         ts.append(t)
