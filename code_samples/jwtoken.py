@@ -14,7 +14,9 @@ def getUserDetails():
 
 # This method gets the channelList from the allChannels.json file and returns it as a list/dictionary
 def getChannelList():
-    return json.load(open("allChannels.json", "r"))
+    with open("allChannels.json", "r") as channel_file:
+        channel_list = json.load(channel_file)
+    return channel_list
 
 # This method will generate a jwt based on the supplied channelId
 # It involves sending a post request to a specific endpoint with some headers and params
@@ -191,7 +193,7 @@ def getHeaders():
     }
     return headers
 
-
 if __name__ == '__main__':
-    channel_id = str(input("Enter the channelId for which you want to generate the token"))
-    generateJWT(channel_id)
+    channel_list = getChannelList()
+    for channel in channel_list:
+        print(f"Channel: {channel['channel_name']}, ID: {channel['channel_id']}, Genre: {channel['channel_genre']}, Logo: {channel['channel_logo']}, URL: {channel['channel_url']}")
